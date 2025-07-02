@@ -2,7 +2,7 @@ use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let listener = TcpListener::bind("127.0.0.1:6379").await?;
 
     loop {
