@@ -1,28 +1,32 @@
-#![allow(unused_imports)]
-use std::io::{Read, Write};
-use std::net::TcpListener;
+use tokio::net::TcpListener;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-fn main() {
-    let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
+#[tokio::main]
+async fn main() {
+    let listener = TcpListener::bind("127.0.0.1:6379").await?;
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut stream) => {
-                loop {
-                    let mut buf = [0; 512];
-                    match stream.read(&mut buf) {
-                        Ok(_) => {
-                            stream.write_all(b"+PONG\r\n").unwrap();
+    loop {
+        let (mut stream, _) = listener.accept().await?;
+
+        tokio::spawn(async move {
+            let mut buf = [0; 512];
+
+            loop {
+                match stream.read(&mut buf).await {
+                    Ok(0) => break,
+                    Ok(_) => {
+                        if let Err(e) = stream.write_all(b"+PONG\r\n").await {
+                            eprintln!("Write error: {}", e);
+                            break;
                         }
-                        Err(e) => {
-                            eprintln!("Failed to read from client: {}", e);
-                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Read error: {}", e);
+                        break;
                     }
                 }
             }
-            Err(e) => {
-                println!("error: {}", e);
-            }
-        }
+        });
     }
 }
+
