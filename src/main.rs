@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
                 match stream.read(&mut buf).await {
                     Ok(0) => break,
                     Ok(n) => {
-                        let mut parser = parser::Resp::new(&buf[..n]); // only parse filled bytes
+                        let mut parser = parser::Resp::new(&buf[..n]);
                         let resp = match parser.parse_texts() {
                             Ok(r) => r,
                             Err(e) => {
