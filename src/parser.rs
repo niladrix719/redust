@@ -18,9 +18,10 @@ impl<R: Read> Resp<R> {
 
         match sym {
             b'*' => self.parse_array(),
+            b'$' => self.parse_string().map(|s| vec![s]),
             _ => Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "Invalid response type",
+                io::ErrorKind::InvalidData,
+                "Invalid response type",
             )),
         }
     }
@@ -60,5 +61,10 @@ impl<R: Read> Resp<R> {
         }
 
         Ok(elements)
+    }
+
+    pub fn parse_string(&mut self) -> Result<String, std::io::Error> {
+        let _len_str = self.read_line()?;
+        self.read_line()
     }
 }
