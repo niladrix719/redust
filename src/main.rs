@@ -11,6 +11,7 @@ async fn main() -> std::io::Result<()> {
         let (mut stream, _) = listener.accept().await?;
         tokio::spawn(async move {
             let mut buf = [0; 512];
+            let mut map_store = mapper::MapStore::new();
             loop {
                 match stream.read(&mut buf).await {
                     Ok(0) => break,
@@ -52,7 +53,6 @@ async fn main() -> std::io::Result<()> {
                                 }
                                 let key = &resp[1];
                                 let value = &resp[2];
-                                let mut map_store = mapper::MapStore::new();
                                 map_store.set_val(key, value);
                                 let response = format!("+OK\r\n");
                                 if let Err(e) = stream.write_all(response.as_bytes()).await {
@@ -66,8 +66,7 @@ async fn main() -> std::io::Result<()> {
                                     continue;
                                 }
                                 let key = &resp[1];
-                                let mut map_store = mapper::MapStore::new();
-                                let val = map_store.get_val(key);
+                                let val = map_store.get_val(key).unwrap();
                                 let response = format!("${}\r\n{}\r\n", val.len(), val);
                                 if let Err(e) = stream.write_all(response.as_bytes()).await {
                                     eprintln!("Write error: {}", e);
